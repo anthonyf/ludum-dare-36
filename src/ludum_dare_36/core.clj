@@ -11,8 +11,7 @@
            [com.badlogic.gdx.graphics.g2d Sprite]
            [com.badlogic.gdx.assets AssetManager]))
 
-
-(def manager (AssetManager.))
+(declare manager)
 
 (defn make-tape-actor
   []
@@ -39,27 +38,26 @@
 
     (proxy [ApplicationAdapter]
         []
-        (create []
-          (reset! stage (make-stage))
-          (.setInputProcessor Gdx/input @stage)
-          (.load manager "tape.png" Texture)
-          (.finishLoading manager)
-          )
+      (create []
+        (def manager (AssetManager.))
+        (.load manager "tape.png" Texture)
+        (.finishLoading manager)
+        (reset! stage (make-stage))
+        (.setInputProcessor Gdx/input @stage))
 
-        (render []
-          (.glClear Gdx/gl GL30/GL_COLOR_BUFFER_BIT)
-          (when (.update manager)
-            (.act @stage)
-            (.draw @stage)))
+      (render []
+        (.glClear Gdx/gl GL30/GL_COLOR_BUFFER_BIT)
+        (.act @stage)
+        (.draw @stage))
 
-        (resize [width height]
-          (println (.getViewport @stage))
-          (-> @stage
-              .getViewport
-              (.update width height true)))
+      (resize [width height]
+        (println (.getViewport @stage))
+        (-> @stage
+            .getViewport
+            (.update width height true)))
 
-        (dispose []
-          (.dispose @stage)))))
+      (dispose []
+        (.dispose @stage)))))
 
 (defn -main
   []
