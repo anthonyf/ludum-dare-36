@@ -3,7 +3,12 @@
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[org.clojure/clojure "1.8.0"]]
+  :dependencies [[com.badlogicgames.gdx/gdx "1.9.4"]
+                 [com.badlogicgames.gdx/gdx-backend-lwjgl "1.9.4"]
+                 [com.badlogicgames.gdx/gdx-platform "1.9.4" :classifier "natives-desktop"]
+                 [com.badlogicgames.gdx/gdx-freetype "1.9.4"]
+                 [com.badlogicgames.gdx/gdx-freetype-platform "1.9.4" :classifier "natives-desktop"]
+                 [org.clojure/clojure "1.8.0"]]
   :main ^:skip-aot ludum-dare-36.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}})
