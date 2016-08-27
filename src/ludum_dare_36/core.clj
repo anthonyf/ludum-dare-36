@@ -8,14 +8,16 @@
            [org.lwjgl.input Keyboard]
            [com.badlogic.gdx.utils.viewport FitViewport]
            [com.badlogic.gdx.scenes.scene2d Stage Actor Group]
-           [com.badlogic.gdx.scenes.scene2d.ui Image]
-           [com.badlogic.gdx.graphics.g2d Sprite BitmapFont]
+           [com.badlogic.gdx.scenes.scene2d.ui Image Label Label$LabelStyle ImageButton]
+           [com.badlogic.gdx.scenes.scene2d.utils ClickListener]
+           [com.badlogic.gdx.graphics.g2d Sprite BitmapFont TextureRegion]
            [com.badlogic.gdx.graphics Color]
            [com.badlogic.gdx.assets AssetManager]
            [com.badlogic.gdx.assets.loaders.resolvers InternalFileHandleResolver]
            [com.badlogic.gdx.graphics.g2d.freetype
             FreeTypeFontGenerator FreeTypeFontGeneratorLoader FreetypeFontLoader
-            FreetypeFontLoader$FreeTypeFontLoaderParameter]))
+            FreetypeFontLoader$FreeTypeFontLoaderParameter]
+           [com.badlogic.gdx.scenes.scene2d.utils TextureRegionDrawable]))
 
 (declare manager)
 
@@ -23,6 +25,9 @@
   []
   (let [tape-sprite (Sprite. (.get manager "images/tape.png" Texture))
         head-texture (.get manager "images/head.png")
+        label (Label. "011111111111111010111111111111110"
+                      (Label$LabelStyle. (.get manager "bitstream30.ttf" BitmapFont)
+                                         Color/BLACK))
         group (proxy [Group] [])
         head (proxy [Image]
                  [head-texture])
@@ -38,18 +43,36 @@
                 (.getX tape-sprite) (.getY tape-sprite)
                 (.getWidth tape-sprite) (.getHeight tape-sprite))
     (.addActor group tape)
+    (.addActor group label)
+    (.setPosition label -30 -8)
     (.addActor group head)
     (.setPosition head (- (/ (.getWidth tape-sprite) 2)
                           (/ (.getWidth head-texture) 2)) -9)
     group))
+
+(defn make-tape-buttons
+  []
+  (let [left-button (ImageButton.
+                     (TextureRegionDrawable. (TextureRegion. (.get manager "images/left-arrow-button-up.png" Texture)))
+                     (TextureRegionDrawable. (TextureRegion. (.get manager "images/left-arrow-button-down.png" Texture))))
+        right-button (ImageButton.
+                      (TextureRegionDrawable. (TextureRegion. (.get manager "images/right-arrow-button-up.png" Texture)))
+                     (TextureRegionDrawable. (TextureRegion. (.get manager "images/right-arrow-button-down.png" Texture))))]
+    (.addListener left-button
+                  (proxy [ClickListener] []
+                    (clicked [event x y]
+                      (println "Hi! clicked!"))))
+    [left-button right-button]))
 
 (defn make-stage
   []
   (let [[sw sh] c/screen-size
         stage (proxy [Stage]
                   [(FitViewport. sw sh)])
-        tape (make-tape-actor)]
+        tape (make-tape-actor)
+        [left-button right-button] (make-tape-buttons)]
     (.addActor stage tape)
+    (.addActor stage left-button)
     (.setPosition tape 0 100)
     stage))
 
@@ -77,9 +100,14 @@
         (create []
           (proxy-super create)
           (def manager (setup-asset-manager))
-          (doseq [[file type param] [["images/tape.png" Texture nil]
-                                     ["images/head.png" Texture nil]
-                                     ["bitstream30.ttf" BitmapFont (make-font-params "fonts/Bitstream Vera Sans Mono Bold.ttf" :size 30 :color Color/BLACK)]]]
+          (doseq [[file type & [param]] [["images/tape.png" Texture]
+                                         ["images/head.png" Texture]
+                                         ["images/button.png" Texture]
+                                         ["images/left-arrow-button-down.png" Texture]
+                                         ["images/left-arrow-button-up.png" Texture]
+                                         ["images/right-arrow-button-down.png" Texture]
+                                         ["images/right-arrow-button-up.png" Texture]
+                                         ["bitstream30.ttf" BitmapFont (make-font-params "fonts/Bitstream Vera Sans Mono Roman.ttf" :size 100 :color Color/BLACK)]]]
             (.load manager file type param))
           (.finishLoading manager)
           (reset! stage (make-stage))
