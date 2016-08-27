@@ -9,8 +9,13 @@
            [com.badlogic.gdx.utils.viewport FitViewport]
            [com.badlogic.gdx.scenes.scene2d Stage Actor Group]
            [com.badlogic.gdx.scenes.scene2d.ui Image]
-           [com.badlogic.gdx.graphics.g2d Sprite]
-           [com.badlogic.gdx.assets AssetManager]))
+           [com.badlogic.gdx.graphics.g2d Sprite BitmapFont]
+           [com.badlogic.gdx.graphics Color]
+           [com.badlogic.gdx.assets AssetManager]
+           [com.badlogic.gdx.assets.loaders.resolvers InternalFileHandleResolver]
+           [com.badlogic.gdx.graphics.g2d.freetype
+            FreeTypeFontGenerator FreeTypeFontGeneratorLoader FreetypeFontLoader
+            FreetypeFontLoader$FreeTypeFontLoaderParameter]))
 
 (declare manager)
 
@@ -48,6 +53,21 @@
     (.setPosition tape 0 100)
     stage))
 
+(defn setup-asset-manager []
+  (let [manager (AssetManager.)
+        resolver (InternalFileHandleResolver.)]
+    (.setLoader manager FreeTypeFontGenerator (FreeTypeFontGeneratorLoader. resolver))
+    (.setLoader manager BitmapFont ".ttf" (FreetypeFontLoader. resolver))
+    manager))
+
+(defn make-font-params
+  [name & {:keys [size color]}]
+  (let [params (FreetypeFontLoader$FreeTypeFontLoaderParameter.)]
+    (set! (.fontFileName params) name)
+    (and size (set! (.size (.fontParameters params)) size))
+    (and color (set! (.color (.fontParameters params)) color))
+    params))
+
 (defn make-application
   []
   (let [stage (atom nil)]
@@ -55,14 +75,18 @@
     (proxy [ApplicationAdapter]
         []
         (create []
-          (def manager (AssetManager.))
-          (doseq [file ["images/tape.png" "images/head.png"]]
-            (.load manager file Texture))
+          (proxy-super create)
+          (def manager (setup-asset-manager))
+          (doseq [[file type param] [["images/tape.png" Texture nil]
+                                     ["images/head.png" Texture nil]
+                                     ["bitstream30.ttf" BitmapFont (make-font-params "fonts/Bitstream Vera Sans Mono Bold.ttf" :size 30 :color Color/BLACK)]]]
+            (.load manager file type param))
           (.finishLoading manager)
           (reset! stage (make-stage))
           (.setInputProcessor Gdx/input @stage))
 
         (render []
+          (proxy-super render)
           (apply (fn [r g b a] (.glClearColor Gdx/gl  r g b a))
                  (map #(float (/ % 255)) [164 168 128 255]))
           (.glClear Gdx/gl GL30/GL_COLOR_BUFFER_BIT)
@@ -70,12 +94,15 @@
           (.draw @stage))
 
         (resize [width height]
+          (proxy-super resize width height)
           (-> @stage
               .getViewport
               (.update width height true)))
 
         (dispose []
-          (.dispose @stage)))))
+          (proxy-super dispose)
+          (.dispose @stage)
+          (.dispose manager)))))
 
 (defn -main
   []
