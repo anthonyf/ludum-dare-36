@@ -1,38 +1,59 @@
 (ns ludum-dare-36.core
   (:require [ludum-dare-36.common :as c])
   (:import [com.badlogic.gdx ApplicationAdapter Gdx]
-           [com.badlogic.gdx.graphics GL30 OrthographicCamera]
+           [com.badlogic.gdx.graphics Texture GL30 OrthographicCamera]
            [com.badlogic.gdx.backends.lwjgl
             LwjglApplication
             LwjglApplicationConfiguration]
            [org.lwjgl.input Keyboard]
            [com.badlogic.gdx.utils.viewport FitViewport]
-           [com.badlogic.gdx.scenes.scene2d Stage Actor]))
+           [com.badlogic.gdx.scenes.scene2d Stage Actor]
+           [com.badlogic.gdx.graphics.g2d Sprite]
+           [com.badlogic.gdx.assets AssetManager]))
+
+
+(def manager (AssetManager.))
+
+(defn make-tape-actor
+  []
+  (let [sprite (Sprite. (.get manager "tape.png" Texture)
+                                        ;;(Texture. "tape.png")
+                )]
+    (proxy [Actor]
+        []
+        (draw [batch parent-alfpha]
+          (.draw batch sprite (float 0) (float 0))))))
 
 (defn make-stage
   []
-  (let [[sw sh] c/screen-size]
-    (proxy [Stage]
-        [(FitViewport. sw sh)]
-        (create [])
-        )))
+  (let [[sw sh] c/screen-size
+        stage (proxy [Stage]
+                  [(FitViewport. sw sh)])]
+    (.addActor stage (make-tape-actor))
+    stage))
 
 
 (defn make-application
   []
   (let [stage (atom nil)]
+
     (proxy [ApplicationAdapter]
         []
         (create []
           (reset! stage (make-stage))
-          (.setInputProcessor Gdx/input @stage))
+          (.setInputProcessor Gdx/input @stage)
+          (.load manager "tape.png" Texture)
+          (.finishLoading manager)
+          )
 
         (render []
           (.glClear Gdx/gl GL30/GL_COLOR_BUFFER_BIT)
-          (.act @stage)
-          (.draw @stage))
+          (when (.update manager)
+            (.act @stage)
+            (.draw @stage)))
 
         (resize [width height]
+          (println (.getViewport @stage))
           (-> @stage
               .getViewport
               (.update width height true)))
