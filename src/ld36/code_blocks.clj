@@ -1,6 +1,6 @@
 (ns ld36.code-blocks
   (:require [ld36.common :as c]
-            [ld36.turing-machine :as t])
+            [ld36.turing-machine :as tm])
   (:import (com.badlogic.gdx.scenes.scene2d.ui Stack Table Label Label$LabelStyle Image)
            (com.badlogic.gdx.scenes.scene2d Actor)
            (com.badlogic.gdx.graphics.g2d BitmapFont)
@@ -25,6 +25,9 @@
   (let [font (.get c/manager "bitstream50.ttf" BitmapFont)]
     (Label. (str text) (Label$LabelStyle. font Color/BLACK))))
 
+(defn cycle-cell [tm state symbol column]
+  (swap! tm tm/toggle-code-cell state symbol column))
+
 (defn make-goto-cell
   [goto]
   (case goto
@@ -48,8 +51,10 @@
     (make-empty-cell)))
 
 (defn make-code-block
-  [state state-code symbols click-fn]
-  (let [table (Table.)
+  [tm state symbols]
+  (let [{:keys [code]} @tm
+        state-code (state code)
+        table (Table.)
         read-image (Image. (c/make-texture-drawable "images/read.png"))
         write-image (Image. (c/make-texture-drawable "images/write.png"))
         move-image (Image. (c/make-texture-drawable "images/move.png"))
@@ -85,7 +90,16 @@
           (let [cell (.add table cell-contents)]
             (.addListener cell-contents (proxy [ClickListener] []
                                           (clicked [event x y]
-                                            (click-fn symbol column cell))))))))
+                                            (swap! tm tm/toggle-code-cell
+                                                   state symbol column)
+                                            (let [{:keys [code]} @tm
+                                                  state-code (state code)
+                                                  {:keys [write move goto]} ((or state-code {}) symbol)]
+                                              (println state-code)
+                                              (.setActor cell (case column
+                                                                :write (make-write-cell write)
+                                                                :move (make-move-cell move)
+                                                                :goto (make-goto-cell goto)))))))))))
     (.pack table)
     (.add stack background)
     (.add stack table)
@@ -93,8 +107,8 @@
     stack))
 
 (defn make-code-blocks
-  [code click-fn]
-  (let [{:keys [symbols states code]} code
+  [tm]
+  (let [{:keys [symbols states code]} @tm
         table (Table.)
         num-columns 5
         states-per-row (partition num-columns num-columns (repeat num-columns nil) states)]
@@ -102,9 +116,7 @@
       (doseq [state states]
         (if-not (nil? state)
           (-> table
-              (.add (make-code-block state (state code) symbols
-                                     (fn [symbol column cell]
-                                       (click-fn state symbol column cell))))
+              (.add (make-code-block tm state symbols))
               (.pad (float 3)))
           (-> table (.add))))
       (.row table))

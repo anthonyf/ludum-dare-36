@@ -53,7 +53,8 @@
                                                             (.moveBy label (- char-width) 0)
                                                             (.setText label (tape-to-string tape))))
                                        action))))
-                (write_symbol [tape]))]
+                (write_symbol [tape]
+                  (.setText label (tape-to-string tape))))]
     (.addListener head
                   (proxy [ClickListener] []
                     (clicked [event x y]

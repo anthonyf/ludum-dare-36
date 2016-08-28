@@ -19,9 +19,6 @@
 
 (def tm (atom tm/busy-beaver))
 
-(defn cycle-cell [state symbol column cell]
-  )
-
 (defn head-clicked [tape-actor]
   (swap! tm tm/toggle-head-symbol)
   (p/write-symbol tape-actor (:tape @tm)))
@@ -34,14 +31,13 @@
                   [(FitViewport. sw sh)])
         tape-actor (ta/make-tape-actor (:tape @tm)
                                        head-clicked)
-        program tm/busy-beaver
         [left-button right-button] (ta/make-tape-buttons (fn []
                                                            (swap! tm tm/tape-left)
                                                            (p/move-left tape-actor (:tape @tm)))
                                                          (fn []
                                                            (swap! tm tm/tape-right)
                                                            (p/move-right tape-actor (:tape @tm))))
-        code-blocks (cb/make-code-blocks program cycle-cell)]
+        code-blocks (cb/make-code-blocks tm)]
     (.addActor stage code-blocks)
     (.addActor stage tape-actor)
     (.addActor stage left-button)

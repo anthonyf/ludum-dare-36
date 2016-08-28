@@ -46,7 +46,7 @@
 
 (defn tape-write
   [tm symbol]
-  (assoc-in [:tape :data (-> tm :tape :pos)] symbol))
+  (assoc-in tm [:tape :data (-> tm :tape :pos)] symbol))
 
 (defn tape-left [tm]
   (update-in tm [:tape :pos] dec))
@@ -54,10 +54,26 @@
 (defn tape-right [tm]
   (update-in tm [:tape :pos] inc))
 
+(defn- cycle-item
+  [col current]
+  (nth col (mod (inc (.indexOf col current))
+                (count col))))
+
 (defn toggle-head-symbol
   [tm]
-  tm)
+  (let [{:keys [symbols]} tm
+        current (tape-read tm)
+        next-symbol (cycle-item symbols current)]
+    (tape-write tm next-symbol)))
 
+(defn toggle-code-cell
+  [tm state symbol column]
+  (update-in tm [:code state symbol column]
+             (fn [current-value]
+               (case column
+                 :write (cycle-item (:symbols tm) current-value)
+                 :move (cycle-item [:L :R] current-value)
+                 :goto (cycle-item (:states tm) current-value)))))
 (defn step
   [tm])
 
