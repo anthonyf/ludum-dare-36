@@ -1,6 +1,6 @@
-(ns ludum-dare-36.core-test
+(ns ld36.core-test
   (:require [clojure.test :refer :all]
-            [ludum-dare-36.core :refer :all]))
+            [ld36.core :refer :all]))
 
 (deftest a-test
   (testing "FIXME, I fail."

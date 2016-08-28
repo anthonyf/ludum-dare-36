@@ -1,4 +1,4 @@
-(ns ludum-dare-36.turing-machine)
+(ns ld36.turing-machine)
 
 [[[1 :R 1]
   [1 :L 2]]

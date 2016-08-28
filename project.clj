@@ -1,4 +1,4 @@
-(defproject ludum-dare-36 "0.1.0-SNAPSHOT"
+(defproject ld36 "0.1.0-SNAPSHOT"
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
@@ -9,6 +9,7 @@
                  [com.badlogicgames.gdx/gdx-freetype "1.9.4"]
                  [com.badlogicgames.gdx/gdx-freetype-platform "1.9.4" :classifier "natives-desktop"]
                  [org.clojure/clojure "1.8.0"]]
-  :main ^:skip-aot ludum-dare-36.core
+  :main ld36.core
+  :aot :all
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}})
