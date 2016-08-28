@@ -43,4 +43,5 @@
   [name l r t b]
   (NinePatchDrawable.
    (NinePatch.
-    (.get manager name Texture) l r t b)))
+    (TextureRegion. (.get manager name Texture))
+    l r t b)))

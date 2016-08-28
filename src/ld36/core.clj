@@ -19,7 +19,8 @@
 
 (defn make-stage
   []
-  (let [[sw sh] c/screen-size
+  (let [padding 50
+        [sw sh] c/screen-size
         stage (proxy [Stage]
                   [(FitViewport. sw sh)])
         tape-actor (ta/make-tape-actor @tm/tape)
@@ -29,14 +30,19 @@
                                                          (fn []
                                                            (swap! tm/tape tm/tape-right)
                                                            (p/move-right tape-actor @tm/tape)))
-        code-blocks (cb/make-code-blocks tm/busy-beaver)]
+        code-blocks (cb/make-code-blocks tm/test-program
+                                         ;;tm/busy-beaver
+                                         (fn [state symbol column cell]
+                                           (println state symbol column cell)))]
     (.addActor stage code-blocks)
     (.addActor stage tape-actor)
     (.addActor stage left-button)
     (.addActor stage right-button)
     (.setPosition tape-actor 0 100)
-    (.setPosition code-blocks 0 (- sh (+ (.getHeight code-blocks)
-                                         (/ (.getHeight code-blocks) 2))))
+    (.setPosition code-blocks
+                  padding
+                  (- sh (+ (.getHeight code-blocks)
+                           padding)))
     stage))
 
 (def assets [["images/tape.png" Texture]
@@ -51,6 +57,7 @@
              ["images/write.png" Texture]
              ["images/goto.png" Texture]
              ["images/table-background.png" Texture]
+             ;;["images/table_background.9.png" Texture]
              ["images/small-right-arrow.png" Texture]
              ["images/small-left-arrow.png" Texture]
              ["images/halt.png" Texture]

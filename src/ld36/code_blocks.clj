@@ -1,33 +1,67 @@
 (ns ld36.code-blocks
   (:require [ld36.common :as c]
             [ld36.turing-machine :as t])
-  (:import (com.badlogic.gdx.scenes.scene2d.ui Table Label Label$LabelStyle Image)
-           (com.badlogic.gdx.graphics.g2d BitmapFont NinePatch)
+  (:import (com.badlogic.gdx.scenes.scene2d.ui Stack Table Label Label$LabelStyle Image)
+           (com.badlogic.gdx.scenes.scene2d Actor)
+           (com.badlogic.gdx.graphics.g2d BitmapFont)
            (com.badlogic.gdx.graphics Color)
-           (com.badlogic.gdx.utils Scaling Align)))
+           (com.badlogic.gdx.utils Scaling Align)
+           [com.badlogic.gdx.scenes.scene2d.utils ClickListener]))
+
+(defn make-empty-cell
+  []
+  (let [actor (Actor.)]
+    (.setBounds actor 0 0 40 40)
+    actor))
+
+(defn make-non-scaling-image
+  [name]
+  (let [image (Image. (c/make-texture-drawable name))]
+    (.setScaling image Scaling/none)
+    image))
+
+(defn make-cell-label
+  [text]
+  (let [font (.get c/manager "bitstream50.ttf" BitmapFont)]
+    (Label. (str text) (Label$LabelStyle. font Color/BLACK))))
+
+(defn make-goto-cell
+  [goto]
+  (case goto
+    :halt (make-non-scaling-image "images/halt.png")
+    :accept (make-non-scaling-image "images/accept.png")
+    :reject (make-non-scaling-image "images/reject.png")
+    nil (make-empty-cell)
+    (make-cell-label goto)))
+
+(defn make-move-cell
+  [move]
+  (case move
+    :L (make-non-scaling-image "images/small-left-arrow.png")
+    :R (make-non-scaling-image "images/small-right-arrow.png")
+    (make-empty-cell)))
+
+(defn make-write-cell
+  [write]
+  (if-not (nil? write)
+    (make-cell-label write)
+    (make-empty-cell)))
 
 (defn make-code-block
-  [state state-code symbols]
+  [state state-code symbols click-fn]
   (let [table (Table.)
         read-image (Image. (c/make-texture-drawable "images/read.png"))
         write-image (Image. (c/make-texture-drawable "images/write.png"))
         move-image (Image. (c/make-texture-drawable "images/move.png"))
         goto-image (Image. (c/make-texture-drawable "images/goto.png"))
-        right-arrow (Image. (c/make-texture-drawable "images/small-right-arrow.png"))
-        left-arrow (Image. (c/make-texture-drawable "images/small-left-arrow.png"))
-        accept (Image. (c/make-texture-drawable "images/accept.png"))
-        reject (Image. (c/make-texture-drawable "images/reject.png"))
-        halt (Image. (c/make-texture-drawable "images/halt.png"))
-        font (.get c/manager "bitstream50.ttf" BitmapFont)
-        label (Label. (str state) (Label$LabelStyle. font Color/BLACK))
-        blah (Label. "blah" (Label$LabelStyle. font Color/BLACK))]
-    (doseq [image [right-arrow left-arrow halt accept reject]]
-      (.setScaling image Scaling/none))
-    (.setBackground table (c/make-nine-patch-drawable "images/table-background.png" 5 5 5 5))
-    ;;(.debug table)
+        header-label (make-cell-label state)
+        background (Image. (c/make-nine-patch-drawable "images/table-background.png"
+                                                       70 7 125 7))
+        stack (Stack.)]
+    (.debug table)
     ;; draw  header
     (-> table
-        (.add label)
+        (.add header-label)
         (.colspan 4)
         (.align Align/center))
     (.row table)
@@ -36,34 +70,41 @@
       (.setScaling image Scaling/none)
       (-> table
           (.add image)
-          (.minSize (float 60))
-          ))
+          (.minSize (float 60))))
     (doseq [symbol symbols]
-      (let [{:keys [write move goto]} (state-code symbol)]
+      (let [{:keys [write move goto]} ((or state-code {}) symbol)
+            write-cell (make-write-cell write)
+            move-cell (make-move-cell move)
+            goto-cell (make-goto-cell goto)]
+
         (.row table)
-        (.add table (Label. (str symbol) (Label$LabelStyle. font Color/BLACK)))
-        (.add table (Label. (str write) (Label$LabelStyle. font Color/BLACK)))
-        (.add table (case move
-                      :L left-arrow
-                      :R right-arrow))
-        (.add table (case goto
-                      :halt halt
-                      :accept accept
-                      :reject reject
-                      (Label. (str goto) (Label$LabelStyle. font Color/BLACK))))))
-    table))
+        (.add table (make-cell-label symbol))
+        (doseq [[cell-contents column] (map list
+                                            [write-cell move-cell goto-cell]
+                                            [:write :move :goto])]
+          (let [cell (.add table cell-contents)]
+            (.addListener cell-contents (proxy [ClickListener] []
+                                          (clicked [event x y]
+                                            (click-fn symbol column cell))))))))
+    (.pack table)
+    (.add stack background)
+    (.add stack table)
+    (.pack stack)
+    stack))
 
 (defn make-code-blocks
-  [code]
+  [code click-fn]
   (let [{:keys [symbols states code]} code
         table (Table.)
-        num-columns 3
+        num-columns 5
         states-per-row (partition num-columns num-columns (repeat num-columns nil) states)]
     (doseq [states states-per-row]
       (doseq [state states]
         (if-not (nil? state)
           (-> table
-              (.add (make-code-block state (state code) symbols))
+              (.add (make-code-block state (state code) symbols
+                                     (fn [symbol column cell]
+                                       (click-fn state symbol column cell))))
               (.pad (float 3)))
           (-> table (.add))))
       (.row table))

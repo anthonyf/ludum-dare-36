@@ -25,6 +25,17 @@
                          'C {0 {:write 1 :move :L :goto 'B}
                              1 {:write 1 :move :R :goto :halt}}}})
 
+
+(def test-program {:states ['A 'B 'C 'D]
+                   :symbols [0 1 2]
+                   :code {'A {0 {:write 1 :move :R :goto 'B}
+                              1 {:write 1 :move :L :goto 'C}}
+                          'B {0 {:write 1 :move :L :goto 'A}
+                              1 {:write 1 :move :R :goto 'B}}
+                          'C {0 {:write 1 :move :L :goto 'B}
+                              1 {:write 1 :move :R :goto :halt}}}})
+
+
 (defn make-turing-machine
   [states symbols transitions initial-state accepting-states]
   {;;:tape tape
