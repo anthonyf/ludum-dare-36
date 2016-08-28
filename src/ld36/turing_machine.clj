@@ -1,5 +1,20 @@
 (ns ld36.turing-machine)
 
+(def tape (atom (let [tape {:data (into {} (for [x (range 10)] [x 1] ))
+                            :pos 0}]
+                  (-> tape
+                      (assoc-in [:data -5] 1)
+                      (assoc-in [:data -15] 1)
+                      (assoc-in [:data -25] 1)
+                      (assoc-in [:data 25] 1)))))
+
+(defn tape-left [tape]
+  (update tape :pos dec))
+
+(defn tape-right [tape]
+  (update tape :pos inc))
+
+
 [[[1 :R 1]
   [1 :L 2]]
  [[1 :L 0]
@@ -33,14 +48,6 @@
 
 (defn tape-write
   [tape symbol])
-
-(defn tape-left
-  [tape])
-
-
-(defn tape-right
-  [tape])
-
 
 (defn step
   [{:keys [tape state program] :as machine}]

@@ -22,3 +22,9 @@
 (defn lambda-action-end
   [this]
   (@(.state this)))
+
+(defprotocol Tape
+  (set-tape [this tape])
+  (move-right [this tape])
+  (move-left [this tape])
+  (write-symbol [this tape]))

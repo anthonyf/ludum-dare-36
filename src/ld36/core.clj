@@ -1,7 +1,8 @@
 (ns ld36.core
   (:require [ld36.common :as c]
             [ld36.protocols :as p]
-            [ld36.tape-actor :as ta])
+            [ld36.tape-actor :as ta]
+            [ld36.turing-machine :as tm])
   (:import [com.badlogic.gdx ApplicationAdapter ApplicationListener Gdx]
            [com.badlogic.gdx.graphics Texture GL30 OrthographicCamera]
            [com.badlogic.gdx.backends.lwjgl
@@ -17,26 +18,6 @@
            [com.badlogic.gdx.assets.loaders.resolvers InternalFileHandleResolver]
            [com.badlogic.gdx.scenes.scene2d.utils TextureRegionDrawable]))
 
-
-(defprotocol Tape
-  (set-tape [this tape])
-  (move-right [this tape])
-  (move-left [this tape])
-  (write-symbol [this tape]))
-
-(def tape (atom (let [tape {:data (into {} (for [x (range 10)] [x 1] ))
-                            :pos 0}]
-                  (-> tape
-                      (assoc-in [:data -5] 1)
-                      (assoc-in [:data -15] 1)
-                      (assoc-in [:data -25] 1)
-                      (assoc-in [:data 25] 1)))))
-
-(defn tape-left [tape]
-  (update tape :pos dec))
-
-(defn tape-right [tape]
-  (update tape :pos inc))
 
 (defn make-tape-buttons
   [left-click-fun right-click-fun]
@@ -72,13 +53,13 @@
   (let [[sw sh] c/screen-size
         stage (proxy [Stage]
                   [(FitViewport. sw sh)])
-        tape-actor (ta/make-tape-actor @tape)
+        tape-actor (ta/make-tape-actor @tm/tape)
         [left-button right-button] (make-tape-buttons (fn []
-                                                        (swap! tape tape-left)
-                                                        (move-left tape-actor @tape))
+                                                        (swap! tm/tape tm/tape-left)
+                                                        (p/move-left tape-actor @tm/tape))
                                                       (fn []
-                                                        (swap! tape tape-right)
-                                                        (move-right tape-actor @tape)))]
+                                                        (swap! tm/tape tm/tape-right)
+                                                        (p/move-right tape-actor @tm/tape)))]
     (.addActor stage tape-actor)
     (.addActor stage left-button)
     (.addActor stage right-button)
