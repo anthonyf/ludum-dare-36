@@ -6,7 +6,9 @@
            [com.badlogic.gdx.graphics Color]
            [com.badlogic.gdx.scenes.scene2d Actor Group]
            [com.badlogic.gdx.scenes.scene2d.actions Actions MoveByAction TemporalAction]
-           [ld36.protocols LambdaAction]))
+           [ld36.protocols LambdaAction]
+           [com.badlogic.gdx.scenes.scene2d.utils TextureRegionDrawable]
+           [com.badlogic.gdx.scenes.scene2d.utils ClickListener]))
 
 (defn tape-to-string
   [{:keys [data pos]}]
@@ -64,3 +66,32 @@
     (.setPosition head (- (/ (.getWidth tape-sprite) 2)
                           (/ (.getWidth head-texture) 2)) -9)
     group))
+
+(defn make-tape-buttons
+  [left-click-fun right-click-fun]
+  (let [left-button (ImageButton.
+                     (TextureRegionDrawable. (TextureRegion. (.get c/manager "images/left-arrow-button-up.png" Texture)))
+                     (TextureRegionDrawable. (TextureRegion. (.get c/manager "images/left-arrow-button-down.png" Texture))))
+        right-button (ImageButton.
+                      (TextureRegionDrawable. (TextureRegion. (.get c/manager "images/right-arrow-button-up.png" Texture)))
+                      (TextureRegionDrawable. (TextureRegion. (.get c/manager "images/right-arrow-button-down.png" Texture))))
+        [sw sh] c/screen-size
+        spacing 15]
+    (.addListener left-button
+                  (proxy [ClickListener] []
+                    (clicked [event x y]
+                      (left-click-fun))))
+    (.addListener right-button
+                  (proxy [ClickListener] []
+                    (clicked [event x y]
+                      (right-click-fun))))
+    (.setPosition left-button
+                  (- (/ sw 2)
+                     (.getWidth left-button)
+                     spacing)
+                  spacing)
+    (.setPosition right-button
+                  (+ (/ sw 2)
+                     spacing)
+                  spacing)
+    [left-button right-button]))

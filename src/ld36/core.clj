@@ -11,42 +11,10 @@
            [org.lwjgl.input Keyboard]
            [com.badlogic.gdx.utils.viewport FitViewport]
            [com.badlogic.gdx.scenes.scene2d.ui Image ImageButton]
-           [com.badlogic.gdx.scenes.scene2d.utils ClickListener]
            [com.badlogic.gdx.scenes.scene2d Stage]
            [com.badlogic.gdx.graphics.g2d Sprite BitmapFont TextureRegion]
            [com.badlogic.gdx.graphics Color]
-           [com.badlogic.gdx.assets.loaders.resolvers InternalFileHandleResolver]
-           [com.badlogic.gdx.scenes.scene2d.utils TextureRegionDrawable]))
-
-
-(defn make-tape-buttons
-  [left-click-fun right-click-fun]
-  (let [left-button (ImageButton.
-                     (TextureRegionDrawable. (TextureRegion. (.get c/manager "images/left-arrow-button-up.png" Texture)))
-                     (TextureRegionDrawable. (TextureRegion. (.get c/manager "images/left-arrow-button-down.png" Texture))))
-        right-button (ImageButton.
-                      (TextureRegionDrawable. (TextureRegion. (.get c/manager "images/right-arrow-button-up.png" Texture)))
-                      (TextureRegionDrawable. (TextureRegion. (.get c/manager "images/right-arrow-button-down.png" Texture))))
-        [sw sh] c/screen-size
-        spacing 15]
-    (.addListener left-button
-                  (proxy [ClickListener] []
-                    (clicked [event x y]
-                      (left-click-fun))))
-    (.addListener right-button
-                  (proxy [ClickListener] []
-                    (clicked [event x y]
-                      (right-click-fun))))
-    (.setPosition left-button
-                  (- (/ sw 2)
-                     (.getWidth left-button)
-                     spacing)
-                  spacing)
-    (.setPosition right-button
-                  (+ (/ sw 2)
-                     spacing)
-                  spacing)
-    [left-button right-button]))
+           [com.badlogic.gdx.assets.loaders.resolvers InternalFileHandleResolver]))
 
 (defn make-stage
   []
@@ -54,12 +22,12 @@
         stage (proxy [Stage]
                   [(FitViewport. sw sh)])
         tape-actor (ta/make-tape-actor @tm/tape)
-        [left-button right-button] (make-tape-buttons (fn []
-                                                        (swap! tm/tape tm/tape-left)
-                                                        (p/move-left tape-actor @tm/tape))
-                                                      (fn []
-                                                        (swap! tm/tape tm/tape-right)
-                                                        (p/move-right tape-actor @tm/tape)))]
+        [left-button right-button] (ta/make-tape-buttons (fn []
+                                                           (swap! tm/tape tm/tape-left)
+                                                           (p/move-left tape-actor @tm/tape))
+                                                         (fn []
+                                                           (swap! tm/tape tm/tape-right)
+                                                           (p/move-right tape-actor @tm/tape)))]
     (.addActor stage tape-actor)
     (.addActor stage left-button)
     (.addActor stage right-button)
