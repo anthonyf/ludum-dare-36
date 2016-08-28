@@ -7,7 +7,6 @@
            [com.badlogic.gdx.scenes.scene2d Actor Group]
            [com.badlogic.gdx.scenes.scene2d.actions Actions MoveByAction TemporalAction]
            [ld36.protocols LambdaAction]
-           [com.badlogic.gdx.scenes.scene2d.utils TextureRegionDrawable]
            [com.badlogic.gdx.scenes.scene2d.utils ClickListener]))
 
 (defn tape-to-string
@@ -21,7 +20,7 @@
   [tape]
   (let [tape-sprite (Sprite. (.get c/manager "images/tape.png" Texture))
         head-texture (.get c/manager "images/head.png")
-        font (.get c/manager "bitstream30.ttf" BitmapFont)
+        font (.get c/manager "bitstream100.ttf" BitmapFont)
         char-width (.width (c/char-width font "1"))
         speed 0.25
         label (Label. (tape-to-string tape)
@@ -70,11 +69,11 @@
 (defn make-tape-buttons
   [left-click-fun right-click-fun]
   (let [left-button (ImageButton.
-                     (TextureRegionDrawable. (TextureRegion. (.get c/manager "images/left-arrow-button-up.png" Texture)))
-                     (TextureRegionDrawable. (TextureRegion. (.get c/manager "images/left-arrow-button-down.png" Texture))))
+                     (c/make-texture-drawable "images/left-arrow-button-up.png")
+                     (c/make-texture-drawable "images/left-arrow-button-down.png"))
         right-button (ImageButton.
-                      (TextureRegionDrawable. (TextureRegion. (.get c/manager "images/right-arrow-button-up.png" Texture)))
-                      (TextureRegionDrawable. (TextureRegion. (.get c/manager "images/right-arrow-button-down.png" Texture))))
+                      (c/make-texture-drawable "images/right-arrow-button-up.png")
+                      (c/make-texture-drawable "images/right-arrow-button-down.png"))
         [sw sh] c/screen-size
         spacing 15]
     (.addListener left-button

@@ -1,11 +1,13 @@
 (ns ld36.common
-  (:import [com.badlogic.gdx.graphics.g2d GlyphLayout]
+  (:import [com.badlogic.gdx.graphics Texture]
+           [com.badlogic.gdx.graphics.g2d GlyphLayout]
            [com.badlogic.gdx.assets AssetManager]
            [com.badlogic.gdx.assets.loaders.resolvers InternalFileHandleResolver]
            [com.badlogic.gdx.graphics.g2d.freetype
             FreeTypeFontGenerator FreeTypeFontGeneratorLoader FreetypeFontLoader
             FreetypeFontLoader$FreeTypeFontLoaderParameter]
-           [com.badlogic.gdx.graphics.g2d BitmapFont]))
+           [com.badlogic.gdx.graphics.g2d BitmapFont TextureRegion NinePatch]
+           [com.badlogic.gdx.scenes.scene2d.utils TextureRegionDrawable NinePatchDrawable]))
 
 (def title "Ludum Dare 36")
 (def screen-size [1920 1080])
@@ -32,3 +34,13 @@
 (defn char-width [font char]
    (doto glyph-layout
      (.setText font char)))
+
+(defn make-texture-drawable
+  [name]
+  (TextureRegionDrawable. (TextureRegion. (.get manager name Texture))))
+
+(defn make-nine-patch-drawable
+  [name l r t b]
+  (NinePatchDrawable.
+   (NinePatch.
+    (.get manager name Texture) l r t b)))

@@ -2,7 +2,8 @@
   (:require [ld36.common :as c]
             [ld36.protocols :as p]
             [ld36.tape-actor :as ta]
-            [ld36.turing-machine :as tm])
+            [ld36.turing-machine :as tm]
+            [ld36.code-blocks :as cb])
   (:import [com.badlogic.gdx ApplicationAdapter ApplicationListener Gdx]
            [com.badlogic.gdx.graphics Texture GL30 OrthographicCamera]
            [com.badlogic.gdx.backends.lwjgl
@@ -27,11 +28,15 @@
                                                            (p/move-left tape-actor @tm/tape))
                                                          (fn []
                                                            (swap! tm/tape tm/tape-right)
-                                                           (p/move-right tape-actor @tm/tape)))]
+                                                           (p/move-right tape-actor @tm/tape)))
+        code-blocks (cb/make-code-blocks tm/busy-beaver)]
+    (.addActor stage code-blocks)
     (.addActor stage tape-actor)
     (.addActor stage left-button)
     (.addActor stage right-button)
     (.setPosition tape-actor 0 100)
+    (.setPosition code-blocks 0 (- sh (+ (.getHeight code-blocks)
+                                         (/ (.getHeight code-blocks) 2))))
     stage))
 
 (def assets [["images/tape.png" Texture]
@@ -41,7 +46,18 @@
              ["images/left-arrow-button-up.png" Texture]
              ["images/right-arrow-button-down.png" Texture]
              ["images/right-arrow-button-up.png" Texture]
-             ["bitstream30.ttf" BitmapFont (c/make-font-params "fonts/Bitstream Vera Sans Mono Roman.ttf" :size 100 :color Color/BLACK)]])
+             ["images/move.png" Texture]
+             ["images/read.png" Texture]
+             ["images/write.png" Texture]
+             ["images/goto.png" Texture]
+             ["images/table-background.png" Texture]
+             ["images/small-right-arrow.png" Texture]
+             ["images/small-left-arrow.png" Texture]
+             ["images/halt.png" Texture]
+             ["images/reject.png" Texture]
+             ["images/accept.png" Texture]
+             ["bitstream100.ttf" BitmapFont (c/make-font-params "fonts/Bitstream Vera Sans Mono Roman.ttf" :size 100 :color Color/BLACK)]
+             ["bitstream50.ttf" BitmapFont (c/make-font-params "fonts/Bitstream Vera Sans Mono Roman.ttf" :size 50 :color Color/BLACK)]])
 
 (defn make-application
   []

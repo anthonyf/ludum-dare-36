@@ -15,20 +15,15 @@
   (update tape :pos inc))
 
 
-[[[1 :R 1]
-  [1 :L 2]]
- [[1 :L 0]
-  [1 :R 1]]
- [[1 :L 1]
-  [1 :R :halt]]]
 
-(def busy-beaver {:A {0 {:write 1 :move :R :next :B}
-                      1 {:write 1 :move :L :next :C}}
-                  :B {0 {:write 1 :move :L :next :A}
-                      1 {:write 1 :move :R :next :B}}
-                  :C {0 {:write 1 :move :L :next :B}
-                      1 {:write 1 :move :R :next :halt}}})
-
+(def busy-beaver {:states ['A 'B 'C]
+                  :symbols [0 1]
+                  :code {'A {0 {:write 1 :move :R :goto 'B}
+                             1 {:write 1 :move :L :goto 'C}}
+                         'B {0 {:write 1 :move :L :goto 'A}
+                             1 {:write 1 :move :R :goto 'B}}
+                         'C {0 {:write 1 :move :L :goto 'B}
+                             1 {:write 1 :move :R :goto :halt}}}})
 
 (defn make-turing-machine
   [states symbols transitions initial-state accepting-states]
