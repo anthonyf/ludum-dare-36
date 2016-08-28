@@ -58,7 +58,7 @@
         background (Image. (c/make-nine-patch-drawable "images/table-background.png"
                                                        70 7 125 7))
         stack (Stack.)]
-    (.debug table)
+    ;;(.debug table)
     ;; draw  header
     (-> table
         (.add header-label)
