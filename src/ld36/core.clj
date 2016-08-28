@@ -34,6 +34,15 @@
     (.setPosition tape-actor 0 100)
     stage))
 
+(def assets [["images/tape.png" Texture]
+             ["images/head.png" Texture]
+             ["images/button.png" Texture]
+             ["images/left-arrow-button-down.png" Texture]
+             ["images/left-arrow-button-up.png" Texture]
+             ["images/right-arrow-button-down.png" Texture]
+             ["images/right-arrow-button-up.png" Texture]
+             ["bitstream30.ttf" BitmapFont (c/make-font-params "fonts/Bitstream Vera Sans Mono Roman.ttf" :size 100 :color Color/BLACK)]])
+
 (defn make-application
   []
   (let [stage (atom nil)]
@@ -42,16 +51,12 @@
         []
         (create []
           (proxy-super create)
-          (doseq [[file type & [param]] [["images/tape.png" Texture]
-                                         ["images/head.png" Texture]
-                                         ["images/button.png" Texture]
-                                         ["images/left-arrow-button-down.png" Texture]
-                                         ["images/left-arrow-button-up.png" Texture]
-                                         ["images/right-arrow-button-down.png" Texture]
-                                         ["images/right-arrow-button-up.png" Texture]
-                                         ["bitstream30.ttf" BitmapFont (c/make-font-params "fonts/Bitstream Vera Sans Mono Roman.ttf" :size 100 :color Color/BLACK)]]]
+
+          ;; load all assets
+          (doseq [[file type & [param]] assets]
             (.load c/manager file type param))
           (.finishLoading c/manager)
+
           (reset! stage (make-stage))
           (.setInputProcessor Gdx/input @stage))
 
