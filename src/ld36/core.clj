@@ -17,10 +17,14 @@
            [com.badlogic.gdx.graphics Color]
            [com.badlogic.gdx.assets.loaders.resolvers InternalFileHandleResolver]))
 
+(def tm (atom tm/busy-beaver))
+
 (defn cycle-cell [state symbol column cell]
   )
 
-(def tm (atom tm/busy-beaver))
+(defn head-clicked [tape-actor]
+  (swap! tm tm/toggle-head-symbol)
+  (p/write-symbol tape-actor (:tape @tm)))
 
 (defn make-stage
   []
@@ -28,7 +32,8 @@
         [sw sh] c/screen-size
         stage (proxy [Stage]
                   [(FitViewport. sw sh)])
-        tape-actor (ta/make-tape-actor (:tape @tm))
+        tape-actor (ta/make-tape-actor (:tape @tm)
+                                       head-clicked)
         program tm/busy-beaver
         [left-button right-button] (ta/make-tape-buttons (fn []
                                                            (swap! tm tm/tape-left)

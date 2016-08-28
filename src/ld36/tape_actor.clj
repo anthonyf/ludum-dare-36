@@ -17,7 +17,7 @@
      (or (data x) " "))))
 
 (defn make-tape-actor
-  [tape]
+  [tape head-clicked-fn]
   (let [tape-sprite (Sprite. (.get c/manager "images/tape.png" Texture))
         head-texture (.get c/manager "images/head.png")
         font (.get c/manager "bitstream100.ttf" BitmapFont)
@@ -26,8 +26,7 @@
         label (Label. (tape-to-string tape)
                       (Label$LabelStyle. font
                                          Color/BLACK))
-        head (proxy [Image]
-                 [head-texture])
+        head (Image. head-texture)
         tape (proxy [Actor]
                  []
                  (draw [batch parent-alpha]
@@ -55,6 +54,10 @@
                                                             (.setText label (tape-to-string tape))))
                                        action))))
                 (write_symbol [tape]))]
+    (.addListener head
+                  (proxy [ClickListener] []
+                    (clicked [event x y]
+                      (head-clicked-fn group))))
     (.setBounds tape
                 (.getX tape-sprite) (.getY tape-sprite)
                 (.getWidth tape-sprite) (.getHeight tape-sprite))

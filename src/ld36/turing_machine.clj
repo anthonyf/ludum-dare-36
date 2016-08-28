@@ -54,6 +54,10 @@
 (defn tape-right [tm]
   (update-in tm [:tape :pos] inc))
 
+(defn toggle-head-symbol
+  [tm]
+  tm)
+
 (defn step
   [tm])
 
