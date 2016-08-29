@@ -77,6 +77,32 @@
                  :goto (cycle-item (concat (:states tm)
                                            (get tm :end-states []))
                                    current-value inc-or-dec)))))
+
+(defn gen-states
+  [n]
+  (map #(symbol (str (char (+ % (int \A)))))
+       (range n)))
+
+(defn gen-symbols
+  [n]
+  (range n))
+
+(defn add-state
+  [tm]
+  (update tm :states #(gen-states (inc (count %)))))
+
+(defn remove-state
+  [tm]
+  (update tm :states #(gen-states (dec (count %)))))
+
+(defn add-symbol
+  [tm]
+  (update tm :symbols #(gen-symbols (inc (count %)))))
+
+(defn remove-symbol
+  [tm]
+  (update tm :symbols #(gen-symbols (dec (count %)))))
+
 (defn step
   [tm])
 

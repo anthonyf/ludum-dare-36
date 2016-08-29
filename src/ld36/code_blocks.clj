@@ -137,3 +137,54 @@
       (.row table))
     (.pack table)
     table))
+
+(defn stringify
+  [col]
+  (str "{" (clojure.string/join ", " col) "}"))
+
+(defn make-states-and-symbols-actor
+  [tm change-fn]
+  (let [table (Table.)
+        states-label (make-cell-label (stringify (:states @tm)))
+        symbols-label (make-cell-label (stringify (:symbols @tm)))
+        [state-minus state-plus
+         symbol-minus symbol-plus] (map (fn [[mutator file label tm-accessor]]
+                                          (let [button (make-non-scaling-image file)]
+                                            (.addListener button (proxy [ClickListener] []
+                                                                   (clicked [event x y]
+                                                                     (swap! tm mutator)
+                                                                     (.setText label (stringify (tm-accessor @tm)))
+                                                                     (.pack table)
+                                                                     (change-fn))))
+                                            button))
+         [[tm/remove-state "images/minus.png" states-label :states]
+          [tm/add-state "images/plus.png" states-label :states]
+          [tm/remove-symbol "images/minus.png" symbols-label :symbols]
+          [tm/add-symbol "images/plus.png" symbols-label :symbols]])]
+    (-> table
+        (.add state-minus)
+        (.padRight (float 20)))
+    (-> table
+        (.add state-plus)
+        (.padRight (float 20)))
+    (-> table
+        (.add (make-cell-label "States:"))
+        (.align Align/left))
+    (-> table
+        (.add states-label)
+        (.align Align/left))
+    (.row table)
+    (-> table
+        (.add symbol-minus)
+        (.padRight (float 20)))
+    (-> table
+        (.add symbol-plus)
+        (.padRight (float 20)))
+    (-> table
+        (.add (make-cell-label "Symbols:"))
+        (.align Align/left))
+    (-> table
+        (.add symbols-label)
+        (.align Align/left))
+    (.pack table)
+    table))
