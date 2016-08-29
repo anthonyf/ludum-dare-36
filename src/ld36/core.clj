@@ -4,7 +4,8 @@
              [common :as c]
              [protocols :as p]
              [tape-actor :as ta]
-             [turing-machine :as tm]])
+             [turing-machine :as tm]
+             [run-controls :as rc]])
   (:import [com.badlogic.gdx ApplicationAdapter Gdx]
            [com.badlogic.gdx.backends.lwjgl LwjglApplication LwjglApplicationConfiguration]
            [com.badlogic.gdx.graphics Color GL30 Texture]
@@ -32,7 +33,10 @@
                                                            (p/move-left tape-actor (:tape @tm)))
                                                          (fn []
                                                            (swap! tm tm/tape-right)
-                                                           (p/move-right tape-actor (:tape @tm))))
+                                                           (p/move-right tape-actor (:tape @tm)))
+                                                         (fn []
+                                                           ;; todo
+                                                           ))
         set-code-blocks-pos (fn [code-blocks]
                               (.setPosition code-blocks
                                             padding
@@ -51,7 +55,14 @@
                               (.addActor stage (let [cb (cb/make-code-blocks tm)]
                                                  (.setName cb "code-blocks")
                                                  (set-code-blocks-pos cb)
-                                                 cb))))]
+                                                 cb))))
+        run-controls (rc/make-run-controls)]
+    (.setPosition run-controls
+                  (- sw (+ (.getWidth run-controls)
+                           padding))
+                  (- (/ sh 2)
+                     (/ (.getHeight run-controls) 2)))
+    (.addActor stage run-controls)
     (.setPosition states-and-symbols padding (- sh 140))
     (.addActor stage code-blocks)
     (.addActor stage states-and-symbols)

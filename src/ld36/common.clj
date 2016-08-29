@@ -6,8 +6,11 @@
            [com.badlogic.gdx.graphics.g2d.freetype
             FreeTypeFontGenerator FreeTypeFontGeneratorLoader FreetypeFontLoader
             FreetypeFontLoader$FreeTypeFontLoaderParameter]
-           [com.badlogic.gdx.graphics.g2d BitmapFont TextureRegion NinePatch]
-           [com.badlogic.gdx.scenes.scene2d.utils TextureRegionDrawable NinePatchDrawable]))
+           (com.badlogic.gdx.graphics.g2d BitmapFont TextureRegion NinePatch)
+           (com.badlogic.gdx.scenes.scene2d.ui Image ImageTextButton
+                                               ImageTextButton$ImageTextButtonStyle)
+           (com.badlogic.gdx.utils Scaling Align)
+           (com.badlogic.gdx.scenes.scene2d.utils TextureRegionDrawable NinePatchDrawable)))
 
 (def title "Ludum Dare 36")
 (def screen-size [1920 1080])
@@ -45,3 +48,19 @@
    (NinePatch.
     (TextureRegion. (.get manager name Texture))
     l r t b)))
+
+(defn make-non-scaling-image
+  [name]
+  (let [image (Image. (make-texture-drawable name))]
+    (.setScaling image Scaling/none)
+    image))
+
+(defn make-button [text]
+  (let [font (.get manager "bitstream50.ttf" BitmapFont)
+        up-image (make-texture-drawable "images/blank-button-up.png")
+        down-image (make-texture-drawable "images/blank-button-down.png")]
+    (ImageTextButton. text (ImageTextButton$ImageTextButtonStyle.
+                            up-image
+                            down-image
+                            nil
+                            font))))

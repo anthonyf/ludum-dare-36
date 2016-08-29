@@ -1,6 +1,7 @@
 (ns ld36.code-blocks
-  (:require [ld36.common :as c]
-            [ld36.turing-machine :as tm])
+  (:require [ld36
+             [common :as c]
+             [turing-machine :as tm]])
   (:import (com.badlogic.gdx.scenes.scene2d.ui Stack Table Label Label$LabelStyle Image)
            (com.badlogic.gdx.scenes.scene2d Actor)
            (com.badlogic.gdx.graphics.g2d BitmapFont)
@@ -15,12 +16,6 @@
     (.setBounds actor 0 0 40 40)
     actor))
 
-(defn make-non-scaling-image
-  [name]
-  (let [image (Image. (c/make-texture-drawable name))]
-    (.setScaling image Scaling/none)
-    image))
-
 (defn make-cell-label
   [text]
   (let [font (.get c/manager "bitstream50.ttf" BitmapFont)]
@@ -32,17 +27,17 @@
 (defn make-goto-cell
   [goto]
   (case goto
-    :halt (make-non-scaling-image "images/halt.png")
-    :accept (make-non-scaling-image "images/accept.png")
-    :reject (make-non-scaling-image "images/reject.png")
+    :halt (c/make-non-scaling-image "images/halt.png")
+    :accept (c/make-non-scaling-image "images/accept.png")
+    :reject (c/make-non-scaling-image "images/reject.png")
     nil (make-empty-cell)
     (make-cell-label goto)))
 
 (defn make-move-cell
   [move]
   (case move
-    :L (make-non-scaling-image "images/small-left-arrow.png")
-    :R (make-non-scaling-image "images/small-right-arrow.png")
+    :L (c/make-non-scaling-image "images/small-left-arrow.png")
+    :R (c/make-non-scaling-image "images/small-right-arrow.png")
     (make-empty-cell)))
 
 (defn make-write-cell
@@ -149,7 +144,7 @@
         symbols-label (make-cell-label (stringify (:symbols @tm)))
         [state-minus state-plus
          symbol-minus symbol-plus] (map (fn [[mutator file label tm-accessor]]
-                                          (let [button (make-non-scaling-image file)]
+                                          (let [button (c/make-non-scaling-image file)]
                                             (.addListener button (proxy [ClickListener] []
                                                                    (clicked [event x y]
                                                                      (swap! tm mutator)

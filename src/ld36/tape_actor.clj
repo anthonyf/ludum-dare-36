@@ -71,7 +71,7 @@
     group))
 
 (defn make-tape-buttons
-  [left-click-fun right-click-fun]
+  [left-click-fun right-click-fun clear-fun]
   (let [left-button (ImageButton.
                      (c/make-texture-drawable "images/left-arrow-button-up.png")
                      (c/make-texture-drawable "images/left-arrow-button-down.png"))
