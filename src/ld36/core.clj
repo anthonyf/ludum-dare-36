@@ -27,7 +27,9 @@
         [sw sh] c/screen-size
         stage (proxy [Stage]
                   [(FitViewport. sw sh)])
-        code-blocks (let [cb (cb/make-code-blocks tm)]
+        code-blocks (let [cb (cb/make-code-blocks tm (fn [state]
+                                                       ;; TODO state change
+                                                       ))]
                       (.setName cb "code-blocks")
                       cb)
         code-selection (cb/make-code-selection)
@@ -44,7 +46,9 @@
                              (doseq [actor (.getActors stage)]
                                (when (= (.getName actor) "code-blocks")
                                  (.remove actor)))
-                             (let [cb (cb/make-code-blocks tm)]
+                             (let [cb (cb/make-code-blocks tm (fn [state]
+                                                                ;; TODO state change
+                                                                ))]
                                (.setName cb "code-blocks")
                                (set-code-blocks-pos cb)
                                (.addActor stage cb)
