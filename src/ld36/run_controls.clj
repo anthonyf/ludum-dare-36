@@ -7,11 +7,18 @@
   []
   (let [run-button (c/make-button "Run")
         step-button (c/make-button "Step")
+        back-button (c/make-button "Back")
         table (Table.)
-        padding 10]
-    (-> table (.add run-button)
-        (.padBottom (float padding)))
+        padding (float 10)]
+    (-> table
+        (.add run-button)
+        (.padBottom padding))
     (.row table)
-    (-> table (.add step-button))
+    (-> table
+        (.add step-button)
+        (.padBottom padding))
+    (.row table)
+    (-> table
+        (.add back-button))
     (.pack table)
     table))
