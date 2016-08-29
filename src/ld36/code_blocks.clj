@@ -3,12 +3,16 @@
              [common :as c]
              [turing-machine :as tm]])
   (:import (com.badlogic.gdx.scenes.scene2d.ui Stack Table Label Label$LabelStyle Image)
-           (com.badlogic.gdx.scenes.scene2d Actor)
+           (com.badlogic.gdx.scenes.scene2d Actor Touchable)
            (com.badlogic.gdx.graphics.g2d BitmapFont)
            (com.badlogic.gdx.graphics Color)
            (com.badlogic.gdx.utils Scaling Align)
-           [com.badlogic.gdx.scenes.scene2d.utils ClickListener]
-           (com.badlogic.gdx Input$Buttons)))
+           (com.badlogic.gdx.scenes.scene2d.utils ClickListener)
+           (com.badlogic.gdx Input$Buttons)
+           (com.badlogic.gdx.math Vector2)))
+
+(def num-columns 5)
+(def cell-locations (atom nil))
 
 (defn make-empty-cell
   []
@@ -99,28 +103,29 @@
           (.minSize (float 60))))
     (doseq [symbol symbols]
       (let [{:keys [write move goto]} ((or state-code {}) symbol)
+            read-label (make-cell-label symbol)
             write-cell (make-write-cell write)
             move-cell (make-move-cell move)
             goto-cell (make-goto-cell goto)]
-
+        (swap! cell-locations assoc [state symbol] read-label)
         (.row table)
-        (.add table (make-cell-label symbol))
+        (.add table read-label)
         (doseq [[actor column] (map list
                                     [write-cell move-cell goto-cell]
                                     [:write :move :goto])]
           (let [cell (.add table actor)]
             (add-click-listeners actor tm state symbol column cell)))))
-    (.pack table)
+    ;;(.pack table)
     (.add stack background)
     (.add stack table)
-    (.pack stack)
+    ;;(.pack stack)
     stack))
 
 (defn make-code-blocks
   [tm]
+  (reset! cell-locations {})
   (let [{:keys [symbols states code]} @tm
         table (Table.)
-        num-columns 5
         states-per-row (partition num-columns num-columns (repeat num-columns nil) states)]
     (doseq [states states-per-row]
       (doseq [state states]
@@ -183,3 +188,22 @@
         (.align Align/left))
     (.pack table)
     table))
+
+(defn make-code-selection []
+  (let [image (c/make-non-scaling-image "images/code-selection.png")]
+    (.setTouchable image Touchable/disabled)
+    image))
+
+(defn update-code-selection-position
+  [code-selection tm code-blocks]
+  (let [{:keys [current-state]} tm
+        label (@cell-locations [current-state (tm/tape-read tm)])
+        offset-x -23
+        offset-y -7]
+    (if-not (nil? label)
+      (let [vector (Vector2. 0 0)]
+        (.localToStageCoordinates label vector)
+        (.setPosition code-selection
+                      (+ offset-x (.x vector))
+                      (+ offset-y (.y vector))))
+      (.setPosition code-selection -1000 -1000))))

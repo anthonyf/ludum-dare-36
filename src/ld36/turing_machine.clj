@@ -43,7 +43,8 @@
 
 (defn tape-read
   [tm]
-  ((-> tm :tape :data) (-> tm :tape :pos)))
+  (or ((-> tm :tape :data) (-> tm :tape :pos))
+      0))
 
 (defn tape-write
   [tm symbol]

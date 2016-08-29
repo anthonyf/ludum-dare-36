@@ -16,9 +16,10 @@
 
 (def tm (atom tm/busy-beaver))
 
-(defn head-clicked [tape-actor]
+(defn head-clicked [tape-actor code-selection code-blocks]
   (swap! tm tm/toggle-head-symbol inc)
-  (p/write-symbol tape-actor (:tape @tm)))
+  (p/write-symbol tape-actor (:tape @tm))
+  (cb/update-code-selection-position code-selection @tm code-blocks))
 
 (defn make-stage
   []
@@ -26,8 +27,13 @@
         [sw sh] c/screen-size
         stage (proxy [Stage]
                   [(FitViewport. sw sh)])
+        code-blocks (let [cb (cb/make-code-blocks tm)]
+                      (.setName cb "code-blocks")
+                      cb)
+        code-selection (cb/make-code-selection)
         tape-actor (ta/make-tape-actor (:tape @tm)
-                                       head-clicked)
+                                       (fn [tape-actor]
+                                         (head-clicked tape-actor code-selection code-blocks)))
         tape-buttons (ta/make-tape-buttons (fn []
                                              (swap! tm tm/tape-left)
                                              (p/move-left tape-actor (:tape @tm)))
@@ -43,20 +49,27 @@
                                             (- sh (+ (.getHeight code-blocks)
                                                      padding
                                                      100))))
-        code-blocks (let [cb (cb/make-code-blocks tm)]
-                      (.setName cb "code-blocks")
-                      cb)
         states-and-symbols (cb/make-states-and-symbols-actor
                             tm
                             (fn []
                               (doseq [actor (.getActors stage)]
                                 (when (= (.getName actor) "code-blocks")
                                   (.remove actor)))
-                              (.addActor stage (let [cb (cb/make-code-blocks tm)]
-                                                 (.setName cb "code-blocks")
-                                                 (set-code-blocks-pos cb)
-                                                 cb))))
-        run-controls (rc/make-run-controls)]
+                              (let [cb (cb/make-code-blocks tm)]
+                                (.setName cb "code-blocks")
+                                (set-code-blocks-pos cb)
+                                (.addActor stage cb)
+                                (.toBack cb)
+                                (cb/update-code-selection-position code-selection @tm code-blocks))))
+        run-controls (rc/make-run-controls (fn []
+                                             ;; run
+                                             )
+                                           (fn []
+                                             ;;step
+                                             )
+                                           (fn []
+                                             ;;back
+                                             ))]
     (.setPosition run-controls
                   (- sw (+ (.getWidth run-controls)
                            padding))
@@ -66,10 +79,12 @@
     (.setPosition states-and-symbols padding (- sh 140))
     (.addActor stage code-blocks)
     (.addActor stage states-and-symbols)
+    (.addActor stage code-selection)
     (.addActor stage tape-actor)
     (.addActor stage tape-buttons)
     (.setPosition tape-actor 0 100)
     (set-code-blocks-pos code-blocks)
+    (cb/update-code-selection-position code-selection @tm code-blocks)
     stage))
 
 (def assets [["images/tape.png" Texture]
@@ -93,6 +108,7 @@
              ["images/code-selection.png" Texture]
              ["images/blank-button-up.png" Texture]
              ["images/blank-button-down.png" Texture]
+             ["images/code-selection.png" Texture]
              ["bitstream100.ttf" BitmapFont (c/make-font-params "fonts/Bitstream Vera Sans Mono Roman.ttf" :size 100 :color Color/BLACK)]
              ["bitstream50.ttf" BitmapFont (c/make-font-params "fonts/Bitstream Vera Sans Mono Roman.ttf" :size 50 :color Color/BLACK)]])
 
