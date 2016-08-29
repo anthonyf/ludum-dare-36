@@ -28,15 +28,15 @@
                   [(FitViewport. sw sh)])
         tape-actor (ta/make-tape-actor (:tape @tm)
                                        head-clicked)
-        [left-button right-button] (ta/make-tape-buttons (fn []
-                                                           (swap! tm tm/tape-left)
-                                                           (p/move-left tape-actor (:tape @tm)))
-                                                         (fn []
-                                                           (swap! tm tm/tape-right)
-                                                           (p/move-right tape-actor (:tape @tm)))
-                                                         (fn []
-                                                           ;; todo
-                                                           ))
+        tape-buttons (ta/make-tape-buttons (fn []
+                                             (swap! tm tm/tape-left)
+                                             (p/move-left tape-actor (:tape @tm)))
+                                           (fn []
+                                             (swap! tm tm/tape-right)
+                                             (p/move-right tape-actor (:tape @tm)))
+                                           (fn []
+                                             ;; todo
+                                             ))
         set-code-blocks-pos (fn [code-blocks]
                               (.setPosition code-blocks
                                             padding
@@ -67,8 +67,7 @@
     (.addActor stage code-blocks)
     (.addActor stage states-and-symbols)
     (.addActor stage tape-actor)
-    (.addActor stage left-button)
-    (.addActor stage right-button)
+    (.addActor stage tape-buttons)
     (.setPosition tape-actor 0 100)
     (set-code-blocks-pos code-blocks)
     stage))

@@ -2,7 +2,7 @@
   (:require [ld36.common :as c])
   (:import [com.badlogic.gdx.graphics Texture]
            [com.badlogic.gdx.graphics.g2d Sprite BitmapFont TextureRegion]
-           [com.badlogic.gdx.scenes.scene2d.ui Image Label Label$LabelStyle ImageButton]
+           [com.badlogic.gdx.scenes.scene2d.ui Image Label Label$LabelStyle ImageButton Table]
            [com.badlogic.gdx.graphics Color]
            [com.badlogic.gdx.scenes.scene2d Actor Group]
            [com.badlogic.gdx.scenes.scene2d.actions Actions MoveByAction TemporalAction]
@@ -71,30 +71,31 @@
     group))
 
 (defn make-tape-buttons
-  [left-click-fun right-click-fun clear-fun]
+  [left-click-fn right-click-fn clear-fn]
   (let [left-button (ImageButton.
                      (c/make-texture-drawable "images/left-arrow-button-up.png")
                      (c/make-texture-drawable "images/left-arrow-button-down.png"))
         right-button (ImageButton.
                       (c/make-texture-drawable "images/right-arrow-button-up.png")
                       (c/make-texture-drawable "images/right-arrow-button-down.png"))
+        clear-button (c/make-button "Clear")
+        table (Table.)
         [sw sh] c/screen-size
+        padding (float 10)
         spacing 15]
-    (.addListener left-button
-                  (proxy [ClickListener] []
-                    (clicked [event x y]
-                      (left-click-fun))))
-    (.addListener right-button
-                  (proxy [ClickListener] []
-                    (clicked [event x y]
-                      (right-click-fun))))
-    (.setPosition left-button
+    (doseq [[button action-fn] [[left-button left-click-fn]
+                                [right-button right-click-fn]
+                                [clear-button clear-fn]]]
+      (.addListener button
+                    (proxy [ClickListener] []
+                      (clicked [event x y]
+                        (action-fn)))))
+    (-> table (.add left-button) (.padRight padding))
+    (-> table (.add clear-button) (.padRight padding))
+    (-> table (.add right-button))
+    (.pack table)
+    (.setPosition table
                   (- (/ sw 2)
-                     (.getWidth left-button)
-                     spacing)
+                     (/ (.getWidth table) 2))
                   spacing)
-    (.setPosition right-button
-                  (+ (/ sw 2)
-                     spacing)
-                  spacing)
-    [left-button right-button]))
+    table))
