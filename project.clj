@@ -10,6 +10,6 @@
                  [com.badlogicgames.gdx/gdx-freetype-platform "1.9.4" :classifier "natives-desktop"]
                  [org.clojure/clojure "1.8.0"]]
   :main ld36.core
-  :aot :all
+  :aot [ld36.protocols]
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}})
