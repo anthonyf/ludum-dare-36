@@ -34,51 +34,62 @@
         tape-actor (ta/make-tape-actor (:tape @tm)
                                        (fn [tape-actor]
                                          (head-clicked tape-actor code-selection code-blocks)))
-        tape-buttons (ta/make-tape-buttons (fn []
-                                             (swap! tm tm/tape-left)
-                                             (p/move-left tape-actor (:tape @tm)))
-                                           (fn []
-                                             (swap! tm tm/tape-right)
-                                             (p/move-right tape-actor (:tape @tm)))
-                                           (fn []
-                                             (swap! tm tm/tape-erase)
-                                             (p/set-tape tape-actor (:tape @tm))))
         set-code-blocks-pos (fn [code-blocks]
                               (.setPosition code-blocks
                                             padding
                                             (- sh (+ (.getHeight code-blocks)
                                                      padding
                                                      100))))
-        states-and-symbols (cb/make-states-and-symbols-actor
+        update-code-blocks (fn []
+                             (doseq [actor (.getActors stage)]
+                               (when (= (.getName actor) "code-blocks")
+                                 (.remove actor)))
+                             (let [cb (cb/make-code-blocks tm)]
+                               (.setName cb "code-blocks")
+                               (set-code-blocks-pos cb)
+                               (.addActor stage cb)
+                               (.toBack cb)
+                               (cb/update-code-selection-position code-selection @tm code-blocks)))
+
+        tape-buttons (ta/make-tape-buttons (fn []
+                                             (swap! tm tm/tape-left)
+                                             (p/move-left tape-actor (:tape @tm))
+                                             (update-code-blocks))
+                                           (fn []
+                                             (swap! tm tm/tape-right)
+                                             (p/move-right tape-actor (:tape @tm))
+                                             (update-code-blocks))
+                                           (fn []
+                                             (swap! tm tm/tape-erase)
+                                             (p/set-tape tape-actor (:tape @tm))
+                                             (update-code-blocks)))
+        states-and-symbols (cb/make-states-and-symbols
                             tm
-                            (fn []
-                              (doseq [actor (.getActors stage)]
-                                (when (= (.getName actor) "code-blocks")
-                                  (.remove actor)))
-                              (let [cb (cb/make-code-blocks tm)]
-                                (.setName cb "code-blocks")
-                                (set-code-blocks-pos cb)
-                                (.addActor stage cb)
-                                (.toBack cb)
-                                (cb/update-code-selection-position code-selection @tm code-blocks))))
+                            update-code-blocks)
         run-controls (rc/make-run-controls (fn []
                                              ;; run
                                              )
                                            (fn []
-                                             ;;step
-                                             )
+                                             ;; step
+                                             (swap! tm tm/step)
+                                             (update-code-blocks)
+                                             (p/set-tape tape-actor (:tape @tm))
+                                             (cb/update-state-and-symbols states-and-symbols tm))
                                            (fn []
                                              ;;back
-                                             ))]
+                                             (swap! tm tm/pop-state)
+                                             (update-code-blocks)
+                                             (p/set-tape tape-actor (:tape @tm))
+                                             (cb/update-state-and-symbols states-and-symbols tm)))]
     (.setPosition run-controls
                   (- sw (+ (.getWidth run-controls)
                            padding))
                   (- (/ sh 2)
                      (/ (.getHeight run-controls) 2)))
     (.addActor stage run-controls)
-    (.setPosition states-and-symbols padding (- sh 140))
+    (.setPosition (:actor states-and-symbols) padding (- sh 140))
     (.addActor stage code-blocks)
-    (.addActor stage states-and-symbols)
+    (.addActor stage (:actor states-and-symbols))
     (.addActor stage code-selection)
     (.addActor stage tape-actor)
     (.addActor stage tape-buttons)

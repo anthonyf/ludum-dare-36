@@ -142,7 +142,20 @@
   [col]
   (str "{" (clojure.string/join ", " col) "}"))
 
-(defn make-states-and-symbols-actor
+(defrecord StatesAndSymbols
+    [actor
+     states-label
+     symbols-label])
+
+
+(defn update-state-and-symbols
+  [states-and-symbols tm]
+  (let [{:keys [states-label symbols-label]} states-and-symbols]
+    (.setText states-label (stringify (:states @tm)))
+    (.setText symbols-label (stringify (:symbols @tm))))
+  states-and-symbols)
+
+(defn make-states-and-symbols
   [tm change-fn]
   (let [table (Table.)
         states-label (make-cell-label (stringify (:states @tm)))
@@ -187,7 +200,9 @@
         (.add symbols-label)
         (.align Align/left))
     (.pack table)
-    table))
+    (map->StatesAndSymbols {:actor table
+                            :states-label states-label
+                            :symbols-label symbols-label})))
 
 (defn make-code-selection []
   (let [image (c/make-non-scaling-image "images/code-selection.png")]

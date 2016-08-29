@@ -7,7 +7,6 @@
            :prefix lambda-action-
            :methods [[setLambda [Object] void]])
 
-
 (defn lambda-action-init
   []
   [[] (atom nil)])
@@ -28,3 +27,6 @@
   (move-right [this tape])
   (move-left [this tape])
   (write-symbol [this tape]))
+
+(gen-class :name ld36.protocols.TuringMachineException
+           :extends java.lang.Exception)

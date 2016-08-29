@@ -1,4 +1,7 @@
-(ns ld36.turing-machine)
+(ns ld36.turing-machine
+  (:require [ld36
+             [protocols :as p]])
+  (:import (ld36.protocols TuringMachineException)))
 
 (def busy-beaver {:states ['A 'B 'C]
                   :end-states [:halt :accept :reject]
@@ -26,20 +29,46 @@
                    :tape {:data {}
                           :pos 0}})
 
+;; (defn- make-turing-machine
+;;   ;; this function doesnt work yet
+;;   [states symbols accepting-states code]
+;;   {:tape {:data {} :pos 0}
+;;    :states states
+;;    :symbols symbols
+;;    :accepting-states accepting-states
+;;    :code {}
+;;    :current-state (first states)})
 
-(defn make-turing-machine
-  ;; this function doesnt work yet
-  [states symbols accepting-states code]
-  {:tape {:data {} :pos 0}
-   :states states
-   :symbols symbols
-   :accepting-states accepting-states
-   :code {}
-   :current-state (first states)})
+(defn- cycle-item
+  [col current inc-or-dec]
+  (nth col (mod (inc-or-dec (.indexOf col current))
+                (count col))))
+
+(defn- gen-states
+  [n]
+  (map #(symbol (str (char (+ % (int \A)))))
+       (range n)))
+
+(defn- gen-symbols
+  [n]
+  (range n))
+
+;; turing commands
+
+(defn push-state
+  [tm]
+  (assoc tm :previous-state tm))
+
+(defn pop-state
+  [tm]
+  (or (:previous-state tm)
+      tm))
 
 (defn tape-erase
   [tm]
-  (assoc tm :tape {:pos 0 :data {}}))
+  (-> tm
+      push-state
+      (assoc :tape {:pos 0 :data {}})))
 
 (defn tape-read
   [tm]
@@ -48,18 +77,19 @@
 
 (defn tape-write
   [tm symbol]
-  (assoc-in tm [:tape :data (-> tm :tape :pos)] symbol))
+  (-> tm
+      push-state
+      (assoc-in [:tape :data (-> tm :tape :pos)] symbol)))
 
 (defn tape-left [tm]
-  (update-in tm [:tape :pos] dec))
+  (-> tm
+      push-state
+      (update-in [:tape :pos] dec)))
 
 (defn tape-right [tm]
-  (update-in tm [:tape :pos] inc))
-
-(defn- cycle-item
-  [col current inc-or-dec]
-  (nth col (mod (inc-or-dec (.indexOf col current))
-                (count col))))
+  (-> tm
+      push-state
+      (update-in [:tape :pos] inc)))
 
 (defn toggle-head-symbol
   [tm inc-or-dec]
@@ -70,42 +100,79 @@
 
 (defn toggle-code-cell
   [tm state symbol column inc-or-dec]
-  (update-in tm [:code state symbol column]
-             (fn [current-value]
-               (case column
-                 :write (cycle-item (:symbols tm) current-value inc-or-dec)
-                 :move (cycle-item [:L :R] current-value inc-or-dec)
-                 :goto (cycle-item (concat (:states tm)
-                                           (get tm :end-states []))
-                                   current-value inc-or-dec)))))
-
-(defn gen-states
-  [n]
-  (map #(symbol (str (char (+ % (int \A)))))
-       (range n)))
-
-(defn gen-symbols
-  [n]
-  (range n))
+  (-> tm
+      push-state
+      (update-in [:code state symbol column]
+                 (fn [current-value]
+                   (case column
+                     :write (cycle-item (:symbols tm) current-value inc-or-dec)
+                     :move (cycle-item [:L :R] current-value inc-or-dec)
+                     :goto (cycle-item (concat (:states tm)
+                                               (get tm :end-states []))
+                                       current-value inc-or-dec))))))
 
 (defn add-state
   [tm]
-  (update tm :states #(gen-states (inc (count %)))))
+  (-> tm
+      push-state
+      (update :states #(gen-states (inc (count %))))))
 
 (defn remove-state
   [tm]
-  (update tm :states #(gen-states (dec (count %)))))
+  (-> tm
+      push-state
+      (update :states #(gen-states (dec (count %))))))
 
 (defn add-symbol
   [tm]
-  (update tm :symbols #(gen-symbols (inc (count %)))))
+  (-> tm
+      push-state
+      (update :symbols #(gen-symbols (inc (count %))))))
 
 (defn remove-symbol
   [tm]
-  (update tm :symbols #(gen-symbols (dec (count %)))))
+  (-> tm
+      push-state
+      (update :symbols #(gen-symbols (dec (count %))))))
+
+(defn current-code-line
+  [tm]
+  (let [symbol (tape-read tm)
+        {:keys [current-state code]} tm
+        state-code (code current-state)
+        {:keys [write move goto]} ((or state-code {}) symbol)]
+    {:state current-state
+     :symbol symbol
+     :write write
+     :move move
+     :goto goto}))
+
+(defn terminated?
+  [tm]
+  (let [{:keys [state symbol write move goto]} (current-code-line tm)]
+    (contains? (set (:end-states tm)) goto)))
 
 (defn step
-  [tm])
+  [tm]
+  (let [{:keys [state symbol write move goto]} (current-code-line tm)]
+    (when (nil? write)
+      (throw (TuringMachineException. "Missing write instruction.")))
+    (when (nil? move)
+      (throw (TuringMachineException. "Missing move instruction.")))
+    (when (nil? goto)
+      (throw (TuringMachineException. "Missing goto state instruction.")))
 
-(defn run
-  [tm])
+    (if (terminated? tm)
+      tm
+      (as-> tm tm
+        (push-state tm)
+        ;; write to tape
+        (let []
+          (assoc-in tm [:tape :data (-> tm :tape :pos)]
+                    write))
+        ;; move tape
+        (case move
+          :L (tape-left tm)
+          :R (tape-right tm))
+        ;; goto next state
+        (assoc tm :current-state goto)))))
