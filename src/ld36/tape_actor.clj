@@ -37,7 +37,6 @@
                    (.setPosition tape-sprite (.getX this) (.getY this))))
         group (proxy [Group ld36.protocols.Tape] []
                 (set_tape [tape]
-                  (println "setting tape")
                   (.setText label (tape-to-string tape)))
                 (move_right [tape]
                   (.addAction label (Actions/sequence
