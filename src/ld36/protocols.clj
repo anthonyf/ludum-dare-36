@@ -22,6 +22,9 @@
   [this]
   (@(.state this)))
 
+(defprotocol Updatable
+  (update-me [this]))
+
 (defprotocol Tape
   (set-tape [this tape])
   (move-right [this tape])

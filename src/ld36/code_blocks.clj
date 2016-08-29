@@ -9,7 +9,8 @@
            (com.badlogic.gdx.utils Scaling Align)
            (com.badlogic.gdx.scenes.scene2d.utils ClickListener)
            (com.badlogic.gdx Input$Buttons)
-           (com.badlogic.gdx.math Vector2)))
+           (com.badlogic.gdx.math Vector2)
+           (ld36.protocols Updatable)))
 
 (def num-columns 5)
 (def cell-locations (atom nil))
@@ -76,7 +77,7 @@
     (add-click-listeners new-actor tm state symbol column cell)))
 
 (defn make-code-block
-  [tm state symbols state-change-fn]
+  [tm state symbols]
   (let [{:keys [code]} @tm
         state-code (state code)
         table (Table.)
@@ -117,26 +118,32 @@
             (add-click-listeners actor tm state symbol column cell)))))
     (.addListener table (proxy [ClickListener] []
                           (clicked [event x y]
-                            (state-change-fn state))))
+                            ;; todo
+                            )))
     (.add stack background)
     (.add stack table)
     stack))
 
 (defn make-code-blocks
-  [tm state-change-fn]
+  [tm]
   (reset! cell-locations {})
-  (let [{:keys [symbols states code]} @tm
-        table (Table.)
-        states-per-row (partition num-columns num-columns (repeat num-columns nil) states)]
-    (doseq [states states-per-row]
-      (doseq [state states]
-        (if-not (nil? state)
-          (-> table
-              (.add (make-code-block tm state symbols state-change-fn))
-              (.pad (float 3)))
-          (-> table (.add))))
-      (.row table))
-    (.pack table)
+  (let [table (proxy [Table Updatable] []
+                (update_me []
+                  (println "update me!")
+                  (.reset this)
+                  (let [table this
+                        {:keys [symbols states code]} @tm
+                        states-per-row (partition num-columns num-columns (repeat num-columns nil) states)]
+                    (doseq [states states-per-row]
+                      (doseq [state states]
+                        (if-not (nil? state)
+                          (-> table
+                              (.add (make-code-block tm state symbols))
+                              (.pad (float 3)))
+                          (-> table (.add))))
+                      (.row table))
+                    (.pack table))))]
+    (.update_me table)
     table))
 
 (defn stringify
