@@ -19,7 +19,7 @@
 (defn head-clicked [tape-actor code-selection code-blocks]
   (swap! tm tm/toggle-head-symbol inc)
   (p/write-symbol tape-actor (:tape @tm))
-  (cb/update-code-selection-position code-selection @tm code-blocks))
+  (cb/update-code-selection-position code-selection @tm))
 
 (def padding 50)
 
@@ -38,8 +38,8 @@
   (let [[sw sh] c/screen-size
         stage (proxy [Stage]
                   [(FitViewport. sw sh)])
-        code-blocks (cb/make-code-blocks tm)
         code-selection (cb/make-code-selection)
+        code-blocks (cb/make-code-blocks tm code-selection)
         tape-actor (ta/make-tape-actor (:tape @tm)
                                        (fn [tape-actor]
                                          (head-clicked tape-actor code-selection code-blocks)))
@@ -47,17 +47,17 @@
                                              (swap! tm tm/tape-left)
                                              (p/move-left tape-actor (:tape @tm))
                                              (update-code-blocks code-blocks)
-                                             (cb/update-code-selection-position code-selection @tm code-blocks))
+                                             (cb/update-code-selection-position code-selection @tm))
                                            (fn []
                                              (swap! tm tm/tape-right)
                                              (p/move-right tape-actor (:tape @tm))
                                              (update-code-blocks code-blocks)
-                                             (cb/update-code-selection-position code-selection @tm code-blocks))
+                                             (cb/update-code-selection-position code-selection @tm))
                                            (fn []
                                              (swap! tm tm/tape-erase)
                                              (p/set-tape tape-actor (:tape @tm))
                                              (update-code-blocks code-blocks)
-                                             (cb/update-code-selection-position code-selection @tm code-blocks)))
+                                             (cb/update-code-selection-position code-selection @tm)))
         states-and-symbols (cb/make-states-and-symbols
                             tm
                             (fn [] (update-code-blocks code-blocks)))
@@ -69,14 +69,14 @@
                                              (swap! tm tm/step)
                                              (update-code-blocks code-blocks)
                                              (p/set-tape tape-actor (:tape @tm))
-                                             (cb/update-code-selection-position code-selection @tm code-blocks)
+                                             (cb/update-code-selection-position code-selection @tm)
                                              (cb/update-state-and-symbols states-and-symbols tm))
                                            (fn []
                                              ;;back
                                              (swap! tm tm/pop-state)
                                              (update-code-blocks code-blocks)
                                              (p/set-tape tape-actor (:tape @tm))
-                                             (cb/update-code-selection-position code-selection @tm code-blocks)
+                                             (cb/update-code-selection-position code-selection @tm)
                                              (cb/update-state-and-symbols states-and-symbols tm)))]
     (.setPosition run-controls
                   (- sw (+ (.getWidth run-controls)
@@ -92,7 +92,7 @@
     (.addActor stage tape-actor)
     (.addActor stage tape-buttons)
     (.setPosition tape-actor 0 100)
-    (cb/update-code-selection-position code-selection @tm code-blocks)
+    (cb/update-code-selection-position code-selection @tm)
     stage))
 
 (def assets [["images/tape.png" Texture]

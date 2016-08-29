@@ -15,6 +15,8 @@
 (def num-columns 5)
 (def cell-locations (atom nil))
 
+(declare update-code-selection-position handle-cell-click)
+
 (defn make-empty-cell
   []
   (let [actor (Actor.)]
@@ -51,8 +53,6 @@
     (make-cell-label write)
     (make-empty-cell)))
 
-(declare handle-cell-click)
-
 (defn add-click-listeners
   [actor tm state symbol column cell]
   (.addListener actor (proxy [ClickListener] []
@@ -76,8 +76,8 @@
     (.setActor cell new-actor)
     (add-click-listeners new-actor tm state symbol column cell)))
 
-(defn make-code-block
-  [tm state symbols]
+(defn- make-code-block
+  [tm state symbols state-clicked-fn]
   (let [{:keys [code]} @tm
         state-code (state code)
         table (Table.)
@@ -118,14 +118,13 @@
             (add-click-listeners actor tm state symbol column cell)))))
     (.addListener table (proxy [ClickListener] []
                           (clicked [event x y]
-                            ;; todo
-                            )))
+                            (state-clicked-fn state))))
     (.add stack background)
     (.add stack table)
     stack))
 
 (defn make-code-blocks
-  [tm]
+  [tm code-selection]
   (reset! cell-locations {})
   (let [table (proxy [Table Updatable] []
                 (update_me []
@@ -138,7 +137,12 @@
                       (doseq [state states]
                         (if-not (nil? state)
                           (-> table
-                              (.add (make-code-block tm state symbols))
+                              (.add (make-code-block tm state symbols
+                                                     (fn [state]
+                                                       (println "state: " state)
+                                                       (swap! tm tm/set-current-state state)
+                                                       (.update_me table)
+                                                       (update-code-selection-position code-selection @tm))))
                               (.pad (float 3)))
                           (-> table (.add))))
                       (.row table))
@@ -218,7 +222,7 @@
     image))
 
 (defn update-code-selection-position
-  [code-selection tm code-blocks]
+  [code-selection tm]
   (let [{:keys [current-state]} tm
         label (@cell-locations [current-state (tm/tape-read tm)])
         offset-x -23
