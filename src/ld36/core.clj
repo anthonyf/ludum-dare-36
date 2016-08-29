@@ -35,8 +35,8 @@
                                              (swap! tm tm/tape-right)
                                              (p/move-right tape-actor (:tape @tm)))
                                            (fn []
-                                             ;; todo
-                                             ))
+                                             (swap! tm tm/tape-erase)
+                                             (p/set-tape tape-actor (:tape @tm))))
         set-code-blocks-pos (fn [code-blocks]
                               (.setPosition code-blocks
                                             padding

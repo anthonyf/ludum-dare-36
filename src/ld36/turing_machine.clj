@@ -37,9 +37,9 @@
    :code {}
    :current-state (first states)})
 
-(defn empty-tape
+(defn tape-erase
   [tm]
-  (assoc tm [:tape] {:pos 0 :data {}}))
+  (assoc tm :tape {:pos 0 :data {}}))
 
 (defn tape-read
   [tm]
