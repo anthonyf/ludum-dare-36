@@ -53,6 +53,20 @@
   [n]
   (range n))
 
+(declare tape-read)
+
+(defn- current-code-line
+  [tm]
+  (let [symbol (tape-read tm)
+        {:keys [current-state code]} tm
+        state-code (code current-state)
+        {:keys [write move goto]} ((or state-code {}) symbol)]
+    {:state current-state
+     :symbol symbol
+     :write write
+     :move move
+     :goto goto}))
+
 ;; turing commands
 
 (defn push-state
@@ -135,17 +149,11 @@
       push-state
       (update :symbols #(gen-symbols (dec (count %))))))
 
-(defn current-code-line
-  [tm]
-  (let [symbol (tape-read tm)
-        {:keys [current-state code]} tm
-        state-code (code current-state)
-        {:keys [write move goto]} ((or state-code {}) symbol)]
-    {:state current-state
-     :symbol symbol
-     :write write
-     :move move
-     :goto goto}))
+(defn set-current-state
+  [tm state]
+  (-> tm
+      push-state
+      (assoc :current-state state)))
 
 (defn terminated?
   [tm]

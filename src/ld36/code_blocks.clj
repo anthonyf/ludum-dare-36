@@ -76,7 +76,7 @@
     (add-click-listeners new-actor tm state symbol column cell)))
 
 (defn make-code-block
-  [tm state symbols]
+  [tm state symbols state-change-fn]
   (let [{:keys [code]} @tm
         state-code (state code)
         table (Table.)
@@ -115,14 +115,15 @@
                                     [:write :move :goto])]
           (let [cell (.add table actor)]
             (add-click-listeners actor tm state symbol column cell)))))
-    ;;(.pack table)
+    (.addListener table (proxy [ClickListener] []
+                          (clicked [event x y]
+                            (state-change-fn state))))
     (.add stack background)
     (.add stack table)
-    ;;(.pack stack)
     stack))
 
 (defn make-code-blocks
-  [tm]
+  [tm state-change-fn]
   (reset! cell-locations {})
   (let [{:keys [symbols states code]} @tm
         table (Table.)
@@ -131,7 +132,7 @@
       (doseq [state states]
         (if-not (nil? state)
           (-> table
-              (.add (make-code-block tm state symbols))
+              (.add (make-code-block tm state symbols state-change-fn))
               (.pad (float 3)))
           (-> table (.add))))
       (.row table))
