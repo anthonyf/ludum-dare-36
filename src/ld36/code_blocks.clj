@@ -6,7 +6,8 @@
            (com.badlogic.gdx.graphics.g2d BitmapFont)
            (com.badlogic.gdx.graphics Color)
            (com.badlogic.gdx.utils Scaling Align)
-           [com.badlogic.gdx.scenes.scene2d.utils ClickListener]))
+           [com.badlogic.gdx.scenes.scene2d.utils ClickListener]
+           (com.badlogic.gdx Input$Buttons)))
 
 (defn make-empty-cell
   []
@@ -50,6 +51,31 @@
     (make-cell-label write)
     (make-empty-cell)))
 
+(declare handle-cell-click)
+
+(defn add-click-listeners
+  [actor tm state symbol column cell]
+  (.addListener actor (proxy [ClickListener] []
+                        (clicked [event x y]
+                          (handle-cell-click tm state symbol column cell inc))))
+  (.addListener actor (proxy [ClickListener] [Input$Buttons/RIGHT]
+                        (clicked [event x y]
+                          (handle-cell-click tm state symbol column cell dec)))))
+
+(defn handle-cell-click
+  [tm state symbol column cell inc-or-dec]
+  (swap! tm tm/toggle-code-cell
+         state symbol column inc-or-dec)
+  (let [{:keys [code]} @tm
+        state-code (state code)
+        {:keys [write move goto]} ((or state-code {}) symbol)
+        new-actor (case column
+                    :write (make-write-cell write)
+                    :move (make-move-cell move)
+                    :goto (make-goto-cell goto))]
+    (.setActor cell new-actor)
+    (add-click-listeners new-actor tm state symbol column cell)))
+
 (defn make-code-block
   [tm state symbols]
   (let [{:keys [code]} @tm
@@ -84,22 +110,11 @@
 
         (.row table)
         (.add table (make-cell-label symbol))
-        (doseq [[cell-contents column] (map list
-                                            [write-cell move-cell goto-cell]
-                                            [:write :move :goto])]
-          (let [cell (.add table cell-contents)]
-            (.addListener cell-contents (proxy [ClickListener] []
-                                          (clicked [event x y]
-                                            (swap! tm tm/toggle-code-cell
-                                                   state symbol column)
-                                            (let [{:keys [code]} @tm
-                                                  state-code (state code)
-                                                  {:keys [write move goto]} ((or state-code {}) symbol)]
-                                              (println state-code)
-                                              (.setActor cell (case column
-                                                                :write (make-write-cell write)
-                                                                :move (make-move-cell move)
-                                                                :goto (make-goto-cell goto)))))))))))
+        (doseq [[actor column] (map list
+                                    [write-cell move-cell goto-cell]
+                                    [:write :move :goto])]
+          (let [cell (.add table actor)]
+            (add-click-listeners actor tm state symbol column cell)))))
     (.pack table)
     (.add stack background)
     (.add stack table)

@@ -1,6 +1,7 @@
 (ns ld36.turing-machine)
 
 (def busy-beaver {:states ['A 'B 'C]
+                  :end-states [:halt :accept :reject]
                   :symbols [0 1]
                   :code {'A {0 {:write 1 :move :R :goto 'B}
                              1 {:write 1 :move :L :goto 'C}}
@@ -55,25 +56,27 @@
   (update-in tm [:tape :pos] inc))
 
 (defn- cycle-item
-  [col current]
-  (nth col (mod (inc (.indexOf col current))
+  [col current inc-or-dec]
+  (nth col (mod (inc-or-dec (.indexOf col current))
                 (count col))))
 
 (defn toggle-head-symbol
-  [tm]
+  [tm inc-or-dec]
   (let [{:keys [symbols]} tm
         current (tape-read tm)
-        next-symbol (cycle-item symbols current)]
+        next-symbol (cycle-item symbols current inc-or-dec)]
     (tape-write tm next-symbol)))
 
 (defn toggle-code-cell
-  [tm state symbol column]
+  [tm state symbol column inc-or-dec]
   (update-in tm [:code state symbol column]
              (fn [current-value]
                (case column
-                 :write (cycle-item (:symbols tm) current-value)
-                 :move (cycle-item [:L :R] current-value)
-                 :goto (cycle-item (:states tm) current-value)))))
+                 :write (cycle-item (:symbols tm) current-value inc-or-dec)
+                 :move (cycle-item [:L :R] current-value inc-or-dec)
+                 :goto (cycle-item (concat (:states tm)
+                                           (get tm :end-states []))
+                                   current-value inc-or-dec)))))
 (defn step
   [tm])
 

@@ -20,7 +20,7 @@
 (def tm (atom tm/busy-beaver))
 
 (defn head-clicked [tape-actor]
-  (swap! tm tm/toggle-head-symbol)
+  (swap! tm tm/toggle-head-symbol inc)
   (p/write-symbol tape-actor (:tape @tm)))
 
 (defn make-stage
